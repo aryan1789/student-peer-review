@@ -3,6 +3,7 @@ import './App.css'
 import { supabase } from './utils/supabaseClient'
 import Auth from './components/Auth'
 import SubmitProject from './components/SubmitProject'
+import Navbar from './components/Navbar'
 
 function App() {
   const [user, setUser] = useState(null)
@@ -42,13 +43,15 @@ function App() {
   }
 
   return (
+    <>
+    <Navbar/>
     <div className="container">
       <h1>Student Peer Review Platform</h1>
       <p>Welcome, {user.email}!</p>
 
-      <div className="card-container">
+      {/* <div className="card-container">
         <SubmitProject onProjectSubmitted={fetchProjects} />
-      </div>
+      </div> */}
 
       <button onClick={() => supabase.auth.signOut()}>Log Out</button>
 
@@ -60,7 +63,7 @@ function App() {
         <div className="card-container">
           <div className="projects-grid">
             {projects.map((project) => (
-              <div key={project.id} className="project-card">
+              <div key={project.id} className="project-card" >
                 <h3>{project.title}</h3>
                 <p>{project.description}</p>
                 {project.tags?.length > 0 && (
@@ -94,6 +97,7 @@ function App() {
         </div>
       )}
     </div>
+    </>
   )
 }
 

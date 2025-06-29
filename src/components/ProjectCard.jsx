@@ -1,6 +1,6 @@
-export default function ProjectCard({ project }) {
+export default function ProjectCard({ project, onClick }) {
   return (
-    <div className="project-card" >
+    <div className="project-card" onClick={onClick} style={{ cursor: 'pointer' }}>
       <h3>{project.title}</h3>
       <p>{project.description.slice(0, 100)}...</p>
       {project.tags?.length > 0 && (

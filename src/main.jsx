@@ -4,6 +4,8 @@ import './index.css'
 import { BrowserRouter, Routes,Route } from 'react-router-dom'
 import App from './App'
 import Home from './pages/Home'
+import ProjectDetails from './pages/ProjectDetails'
+import SubmitProject from './components/SubmitProject'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
@@ -11,6 +13,8 @@ createRoot(document.getElementById('root')).render(
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/dashboard" element={<App />} />
+        <Route path="/project/:id" element={<ProjectDetails />} />
+        <Route path="/Submit" element={<SubmitProject/>}/>
       </Routes>
     </BrowserRouter>
   </StrictMode>,

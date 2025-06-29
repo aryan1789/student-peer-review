@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../utils/supabaseClient'
 import ProjectCard from '../components/ProjectCard'
 import SearchBar from '../components/SearchBar'
+import Navbar from '../components/Navbar' // or './components/Navbar' if in same folder
 
 export default function Home() {
   const [projects, setProjects] = useState([])
@@ -42,13 +43,15 @@ export default function Home() {
   )
 
   return (
+    <>
+    <Navbar />
     <div className="container">
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
         <h1>Explore Projects</h1>
         <div>
           {user ? (
             <div>
-              <button 
+              {/* <button 
                 onClick={() => navigate('/dashboard')}
                 style={{ marginRight: '1rem' }}
               >
@@ -56,7 +59,7 @@ export default function Home() {
               </button>
               <button onClick={() => supabase.auth.signOut()}>
                 Log Out
-              </button>
+              </button> */}
             </div>
           ) : (
             <button onClick={() => navigate('/dashboard')}>
@@ -76,10 +79,12 @@ export default function Home() {
             <ProjectCard
               key={project.id}
               project={project}
+              onClick={() => navigate(`/project/${project.id}`)}
             />
           ))}
         </div>
       )}
     </div>
+    </>
   )
 }

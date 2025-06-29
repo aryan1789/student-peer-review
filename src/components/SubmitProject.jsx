@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { supabase } from "../utils/supabaseClient";
+import Navbar from "./Navbar";
 
 export default function SubmitProject({ onProjectSubmitted }) {
     const [title, setTitle] = useState('')
@@ -62,6 +63,8 @@ export default function SubmitProject({ onProjectSubmitted }) {
     const predefinedTags = ['React', 'Vue', 'JavaScript', 'Python', 'API', 'ML', 'Node.js', 'CSS', 'HTML', 'Database']
 
     return (
+        <>
+        <Navbar/>
         <div className="submit-container">
             <h2>Submit a New Project</h2>
             <form onSubmit={handleSubmit} className="submit-form">
@@ -124,5 +127,6 @@ export default function SubmitProject({ onProjectSubmitted }) {
             {error && <p className="error-msg">{error}</p>}
             {success && <p className="success-msg">{success}</p>}
         </div>
+        </>
     )
 }
