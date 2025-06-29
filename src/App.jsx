@@ -8,11 +8,23 @@ function App() {
   const [user, setUser] = useState(null)
   const [projects, setProjects] = useState([])
 
+  // Function to fetch projects - defined here so it can be called from multiple places
+  const fetchProjects = async () => {
+    const { data, error } = await supabase.from('projects').select('*')
+    if (error) {
+      console.error('Error fetching projects:', error)
+    } else {
+      setProjects(data || [])
+    }
+  }
+
   useEffect(() => {
+    // Get initial session
     supabase.auth.getSession().then(({ data }) => {
       setUser(data.session?.user ?? null)
     })
 
+    // Listen for auth changes
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null)
     })
@@ -22,12 +34,6 @@ function App() {
 
   useEffect(() => {
     if (!user) return
-
-    async function fetchProjects() {
-      const { data, error } = await supabase.from('projects').select('*')
-      if (error) console.error('Error fetching projects:', error)
-      else setProjects(data)
-    }
     fetchProjects()
   }, [user])
 
@@ -41,7 +47,7 @@ function App() {
       <p>Welcome, {user.email}!</p>
 
       <div className="card-container">
-        <SubmitProject onProjectSubmitted={() => fetchProjects()} />
+        <SubmitProject onProjectSubmitted={fetchProjects} />
       </div>
 
       <button onClick={() => supabase.auth.signOut()}>Log Out</button>
