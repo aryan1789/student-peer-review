@@ -65,9 +65,11 @@ export default function SubmitProject({ onProjectSubmitted }) {
     return (
         <>
         <Navbar/>
-        <div className="submit-container">
+        <br></br>
+        <br></br>
+        <div className="submit-container glass-container">
             <h2>Submit a New Project</h2>
-            <form onSubmit={handleSubmit} className="submit-form">
+            <form onSubmit={handleSubmit} className="submit-form glass-form">
                 <input 
                     type="text" 
                     placeholder="Project Title" 
