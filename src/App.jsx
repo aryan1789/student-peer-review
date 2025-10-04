@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useSelector } from 'react-redux'
 import './App.css'
 import { supabase } from './utils/supabaseClient'
 import Auth from './components/Auth'
@@ -6,8 +8,16 @@ import SubmitProject from './components/SubmitProject'
 import Navbar from './components/Navbar'
 
 function App() {
-  const [user, setUser] = useState(null)
+  const navigate = useNavigate()
+  const user = useSelector(state => state.auth.user)
   const [projects, setProjects] = useState([])
+  
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!user) {
+      navigate('/login')
+    }
+  }, [user, navigate])
 
   // Function to fetch projects - defined here so it can be called from multiple places
   const fetchProjects = async () => {
@@ -82,19 +92,7 @@ function App() {
     }
   }
 
-  useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data }) => {
-      setUser(data.session?.user ?? null)
-    })
-
-    // Listen for auth changes
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null)
-    })
-
-    return () => listener.subscription.unsubscribe()
-  }, [])
+  // Auth is now managed by Redux in the Home component
 
   useEffect(() => {
     if (!user) return

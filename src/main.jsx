@@ -6,6 +6,7 @@ import './index.css'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import App from './App'
 import Home from './pages/Home'
+import LandingPage from './pages/LandingPage'
 import ProjectDetails from './pages/ProjectDetails'
 import SubmitProject from './components/SubmitProject'
 import LoginPage from './pages/LoginPage'
@@ -16,12 +17,13 @@ createRoot(document.getElementById('root')).render(
     <Provider store={store}>
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Home />} />
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/home" element={<Home />} />
+          <Route path="/login" element={<LoginPage />} />
           <Route path="/dashboard" element={<App />} />
           <Route path="/profile" element={<Dashboard />} />
           <Route path="/project/:id" element={<ProjectDetails />} />
-          <Route path="/Submit" element={<SubmitProject />} />
-          <Route path="/login" element={<LoginPage />} />
+          <Route path="/submit" element={<SubmitProject />} />
         </Routes>
       </BrowserRouter>
     </Provider>

@@ -191,40 +191,49 @@ export default function Comments({ projectId, isVisible, onClose }) {
   }
 
   const CommentItem = ({ comment, depth = 0 }) => (
-    <div className={`comment-item ${depth > 0 ? 'comment-reply' : ''}`} style={{ marginLeft: depth * 20 }}>
-      <div className="comment-header">
-        <div className="comment-avatar">
-          <img 
-            src={comment.profiles?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(comment.profiles?.full_name || comment.profiles?.email || 'User')}&background=667eea&color=fff`}
-            alt={comment.profiles?.full_name || 'User'}
-          />
+    <div className={`comment-item-modern ${depth > 0 ? 'comment-reply-modern' : ''}`}>
+      <div className="comment-main">
+        <img 
+          src={comment.profiles?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(comment.profiles?.full_name || comment.profiles?.email || 'User')}&background=007acc&color=fff`}
+          alt={comment.profiles?.full_name || 'User'}
+          className="comment-avatar-display"
+        />
+        <div className="comment-body">
+          <div className="comment-header-info">
+            <span className="comment-username">{comment.profiles?.full_name || comment.profiles?.email || 'Anonymous'}</span>
+            <span className="comment-timestamp">
+              {(() => {
+                const now = new Date()
+                const commentDate = new Date(comment.created_at)
+                const diffInMinutes = Math.floor((now - commentDate) / (1000 * 60))
+                
+                if (diffInMinutes < 1) return 'now'
+                if (diffInMinutes < 60) return `${diffInMinutes}m`
+                if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h`
+                if (diffInMinutes < 10080) return `${Math.floor(diffInMinutes / 1440)}d`
+                return commentDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+              })()}
+            </span>
+          </div>
+          <div className="comment-text">
+            {comment.content}
+          </div>
+          <div className="comment-actions-modern">
+            <button 
+              className="action-btn reply-action"
+              onClick={() => setReplyTo(comment)}
+            >
+              Reply
+            </button>
+            <button className="action-btn like-action">
+              ♡ Like
+            </button>
+          </div>
         </div>
-        <div className="comment-meta">
-          <span className="comment-author">{comment.profiles?.full_name || comment.profiles?.email || 'Anonymous'}</span>
-          <span className="comment-time">
-            {new Date(comment.created_at).toLocaleDateString('en-US', {
-              month: 'short',
-              day: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit'
-            })}
-          </span>
-        </div>
-      </div>
-      <div className="comment-content">
-        <p>{comment.content}</p>
-      </div>
-      <div className="comment-actions">
-        <button 
-          className="reply-btn"
-          onClick={() => setReplyTo(comment)}
-        >
-          Reply
-        </button>
       </div>
       
       {comment.replies && comment.replies.length > 0 && (
-        <div className="comment-replies">
+        <div className="comment-replies-modern">
           {comment.replies.map(reply => (
             <CommentItem key={reply.id} comment={reply} depth={depth + 1} />
           ))}
@@ -236,71 +245,82 @@ export default function Comments({ projectId, isVisible, onClose }) {
   if (!isVisible) return null
 
   return (
-    <div className="comments-section">
-      <div className="comments-header">
-        <h3>Comments ({comments.length})</h3>
-        <button className="close-comments" onClick={onClose}>×</button>
+    <div className="modern-comments-section">
+      <div className="comments-header-modern">
+        <h3>💬 Comments</h3>
+        <span className="comments-count">{comments.length}</span>
       </div>
 
       {error && (
-        <div style={{ padding: '1rem', background: '#fee', color: '#c33', borderRadius: '4px', margin: '1rem 0' }}>
-          {error}
-          <button onClick={fetchComments} style={{ marginLeft: '1rem', padding: '0.25rem 0.5rem', background: '#c33', color: 'white', border: 'none', borderRadius: '3px', cursor: 'pointer' }}>
+        <div className="error-message-modern">
+          <span>{error}</span>
+          <button onClick={fetchComments} className="retry-btn">
             Retry
           </button>
         </div>
       )}
 
-      <div className="comments-list">
+      {/* Comment Input Form - Top like Instagram */}
+      {user && (
+        <div className="comment-input-modern">
+          {replyTo && (
+            <div className="reply-indicator-modern">
+              <span>Replying to <strong>@{replyTo.profiles?.full_name || replyTo.profiles?.email}</strong></span>
+              <button type="button" onClick={() => setReplyTo(null)} className="cancel-reply">×</button>
+            </div>
+          )}
+          <form onSubmit={handleSubmitComment} className="comment-form-modern">
+            <div className="comment-input-wrapper">
+              <img 
+                src={user?.user_metadata?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.user_metadata?.full_name || user?.email || 'User')}&background=007acc&color=fff`}
+                alt="Your avatar"
+                className="comment-avatar-modern"
+              />
+              <div className="input-and-button">
+                <input
+                  type="text"
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                  placeholder={replyTo ? `Reply to ${replyTo.profiles?.full_name || 'comment'}...` : "Add a comment..."}
+                  className="comment-input-field"
+                />
+                <button 
+                  type="submit" 
+                  disabled={!newComment.trim() || loading}
+                  className="post-comment-btn"
+                >
+                  {loading ? '...' : 'Post'}
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {!user && (
+        <div className="login-prompt-modern">
+          <span>Sign in to join the conversation</span>
+        </div>
+      )}
+
+      <div className="comments-list-modern">
         {fetchingComments ? (
-          <p style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>Loading comments...</p>
+          <div className="loading-comments">
+            <div className="loading-spinner"></div>
+            <span>Loading comments...</span>
+          </div>
         ) : comments.length === 0 ? (
-          <p className="no-comments">No comments yet. Be the first to comment!</p>
+          <div className="no-comments-modern">
+            <div className="no-comments-icon">💭</div>
+            <h4>No comments yet</h4>
+            <p>Be the first to share your thoughts!</p>
+          </div>
         ) : (
           comments.map(comment => (
             <CommentItem key={comment.id} comment={comment} />
           ))
         )}
       </div>
-
-      {!user ? (
-        <div style={{ padding: '1rem', background: '#fff3cd', borderRadius: '4px', textAlign: 'center' }}>
-          Please log in to add comments.
-        </div>
-      ) : (
-        <form onSubmit={handleSubmitComment} className="comment-form">
-          {replyTo && (
-            <div className="reply-indicator">
-              <span>Replying to {replyTo.profiles?.full_name || replyTo.profiles?.email}</span>
-              <button type="button" onClick={() => setReplyTo(null)}>×</button>
-            </div>
-          )}
-          <div className="comment-input-container">
-            <div className="comment-avatar">
-              <img 
-                src={user?.user_metadata?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.user_metadata?.full_name || user?.email || 'User')}&background=667eea&color=fff`}
-                alt="Your avatar"
-              />
-            </div>
-            <textarea
-              value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
-              placeholder={replyTo ? `Reply to ${replyTo.profiles?.full_name || 'comment'}...` : "Write a comment..."}
-              rows={3}
-              className="comment-textarea"
-            />
-          </div>
-          <div className="comment-form-actions">
-            <button 
-              type="submit" 
-              disabled={!newComment.trim() || loading}
-              className="submit-comment-btn"
-            >
-              {loading ? 'Posting...' : replyTo ? 'Reply' : 'Comment'}
-            </button>
-          </div>
-        </form>
-      )}
     </div>
   )
 }

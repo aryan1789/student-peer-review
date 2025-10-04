@@ -9,7 +9,9 @@ import Navbar from '../components/Navbar'
 
 export default function Home() {
   const [projects, setProjects] = useState([])
-  const [search, setSearch] = useState('')
+  const [filteredProjects, setFilteredProjects] = useState([])
+  const [searchQuery, setSearchQuery] = useState('')
+  const [filterBy, setFilterBy] = useState('title')
   const navigate = useNavigate()
   const dispatch = useDispatch()
   const user = useSelector(state => state.auth.user)
@@ -29,9 +31,19 @@ export default function Home() {
     return () => subscription.unsubscribe()
   }, [dispatch])
 
+  // Redirect to landing page if not authenticated
+  useEffect(() => {
+    if (!user) {
+      navigate('/')
+    }
+  }, [user, navigate])
+
   useEffect(() => {
     async function fetchProjects() {
       try {
+        // Limit projects for non-authenticated users
+        const limit = user ? 50 : 6
+        
         // Try to fetch projects with profiles
         const { data: projectsWithProfiles, error: profilesError } = await supabase
           .from('projects')
@@ -44,6 +56,7 @@ export default function Home() {
               avatar_url
             )
           `)
+          .limit(limit)
         
         if (!profilesError && projectsWithProfiles) {
           console.log('Fetched projects with profiles:', projectsWithProfiles)
@@ -55,12 +68,15 @@ export default function Home() {
         const { data: basicProjects, error: basicError } = await supabase
           .from('projects')
           .select('*')
+          .limit(limit)
         
         if (basicError) {
           console.error('Error fetching projects:', basicError)
         } else {
           console.log('Fetched basic projects:', basicProjects)
-          setProjects(basicProjects || [])
+          const projectsArray = basicProjects || []
+          setProjects(projectsArray)
+          setFilteredProjects(projectsArray)
         }
       } catch (err) {
         console.error('Failed to fetch projects:', err)
@@ -68,40 +84,132 @@ export default function Home() {
     }
 
     fetchProjects()
-  }, [])
+  }, [user])
 
-  const filteredProjects = projects.filter((p) =>
-    p.title.toLowerCase().includes(search.toLowerCase())
-  )
+  // Handle search functionality
+  const handleSearch = (filterType, query) => {
+    setFilterBy(filterType)
+    setSearchQuery(query)
+    
+    if (!query.trim()) {
+      setFilteredProjects(projects)
+      return
+    }
+
+    const filtered = projects.filter((project) => {
+      const searchTerm = query.toLowerCase()
+      
+      if (filterType === 'title') {
+        return project.title?.toLowerCase().includes(searchTerm)
+      } else if (filterType === 'tags') {
+        return project.tags?.some(tag => 
+          tag.toLowerCase().includes(searchTerm)
+        )
+      }
+      return false
+    })
+    
+    setFilteredProjects(filtered)
+  }
+
+  // Handle sorting
+  const handleSort = (sortOption) => {
+    const [sortBy, order] = sortOption.split('-')
+    const sorted = [...filteredProjects].sort((a, b) => {
+      let aValue, bValue
+      
+      if (sortBy === 'title') {
+        aValue = a.title?.toLowerCase() || ''
+        bValue = b.title?.toLowerCase() || ''
+      } else if (sortBy === 'tags') {
+        aValue = a.tags?.join(' ').toLowerCase() || ''
+        bValue = b.tags?.join(' ').toLowerCase() || ''
+      }
+      
+      if (order === 'asc') {
+        return aValue.localeCompare(bValue)
+      } else {
+        return bValue.localeCompare(aValue)
+      }
+    })
+    
+    setFilteredProjects(sorted)
+  }
+
+  // Update filtered projects when projects change
+  useEffect(() => {
+    handleSearch(filterBy, searchQuery)
+  }, [projects])
+
+  // Separate projects into user's and others'
+  const userProjects = filteredProjects.filter(project => project.user_id === user?.id)
+  const othersProjects = filteredProjects.filter(project => project.user_id !== user?.id)
 
   return (
-    <>
-    <Navbar />
-    <div className="container">
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-        <h1>Explore Projects</h1>
-        {/* Debug auth status */}
-        <div style={{ fontSize: '0.9rem', padding: '0.5rem', background: '#f0f0f0', borderRadius: '4px' }}>
-          Status: {user ? `Logged in as ${user.email}` : 'Not logged in'}
+    <div className="home-container">
+      <Navbar />
+      
+      <div className="main-content">
+        <div className="projects-header">
+          <h1>Student Projects</h1>
+          <div className="total-projects-count">
+            Total: {filteredProjects.length} project{filteredProjects.length !== 1 ? 's' : ''}
+          </div>
         </div>
-      </header>
+        
+        <SearchBar 
+          onSearch={handleSearch}
+          onSort={handleSort}
+          hasResults={filteredProjects.length > 0}
+          totalItems={filteredProjects.length}
+        />
+        
+        {filteredProjects.length > 0 ? (
+          <div className="projects-sections">
+            {/* Your Projects Section */}
+            {userProjects.length > 0 && (
+              <div className="projects-section">
+                <div className="section-header">
+                  <h2>Your Projects</h2>
+                  <span className="section-count">{userProjects.length} project{userProjects.length !== 1 ? 's' : ''}</span>
+                </div>
+                <div className="projects-grid">
+                  {userProjects.map(project => (
+                    <ProjectCard 
+                      key={project.id} 
+                      project={project}
+                      onClick={() => navigate(`/project/${project.id}`)}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
 
-      <SearchBar value={search} onChange={setSearch} />
-
-      {filteredProjects.length === 0 ? (
-        <p>No projects found.</p>
-      ) : (
-        <div className="projects-grid">
-          {filteredProjects.map((project) => (
-            <ProjectCard
-              key={project.id}
-              project={project}
-              onClick={() => navigate(`/project/${project.id}`)}
-            />
-          ))}
-        </div>
-      )}
+            {/* Others' Projects Section */}
+            {othersProjects.length > 0 && (
+              <div className="projects-section">
+                <div className="section-header">
+                  <h2>Community Projects</h2>
+                  <span className="section-count">{othersProjects.length} project{othersProjects.length !== 1 ? 's' : ''}</span>
+                </div>
+                <div className="projects-grid">
+                  {othersProjects.map(project => (
+                    <ProjectCard 
+                      key={project.id} 
+                      project={project}
+                      onClick={() => navigate(`/project/${project.id}`)}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        ) : (
+          !searchQuery ? (
+            <div className="no-projects">No projects found.</div>
+          ) : null
+        )}
+      </div>
     </div>
-    </>
   )
 }
